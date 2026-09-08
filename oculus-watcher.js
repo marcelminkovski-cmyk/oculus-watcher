@@ -112,6 +112,16 @@
 const BASE_URL = "https://robinhoodchain.blockscout.com/api/v2";
 // const BASE_URL = "https://api.blockscout.com/v2"; // + chain_id=4663 param, if using PRO
 
+// Blockscout appears to run bot protection that 403s requests without a
+// realistic browser User-Agent — confirmed live: a real browser worked
+// every time during development, a bare fetch() (Node's default, no UA)
+// got a 403 on a real production host with full internet access (not a
+// sandbox/proxy issue). Sent on every request below.
+const REQUEST_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+  "Accept": "application/json",
+};
+
 const CONFIG = {
   POLL_INTERVAL_MS: 15_000,        // how often to fetch new transfers per token
   SHORT_WINDOW_MS: 5 * 60_000,     // 5 min "spike" window (most recent)
@@ -161,7 +171,7 @@ async function fetchAllTokenPages(maxPages = CONFIG.MAX_TOKEN_PAGES) {
   let hasMore = true;
 
   while (hasMore && page < maxPages) {
-    const res = await fetch(`${BASE_URL}/tokens?type=ERC-20${params}`);
+    const res = await fetch(`${BASE_URL}/tokens?type=ERC-20${params}`, { headers: REQUEST_HEADERS });
     if (!res.ok) throw new Error(`token list page ${page} fetch failed: ${res.status}`);
     const data = await res.json();
     all = all.concat(data.items ?? []);
@@ -199,7 +209,7 @@ async function fetchRecentlyActiveTokens() {
 }
 
 async function fetchTokenTransfers(tokenAddress) {
-  const res = await fetch(`${BASE_URL}/tokens/${tokenAddress}/transfers`);
+  const res = await fetch(`${BASE_URL}/tokens/${tokenAddress}/transfers`, { headers: REQUEST_HEADERS });
   if (!res.ok) throw new Error(`transfers fetch failed for ${tokenAddress}: ${res.status}`);
   const data = await res.json();
   return data.items ?? [];
