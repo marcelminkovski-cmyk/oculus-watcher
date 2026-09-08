@@ -172,7 +172,22 @@ async function fetchAllTokenPages(maxPages = CONFIG.MAX_TOKEN_PAGES) {
 
   while (hasMore && page < maxPages) {
     const res = await fetch(`${BASE_URL}/tokens?type=ERC-20${params}`, { headers: REQUEST_HEADERS });
-    if (!res.ok) throw new Error(`token list page ${page} fetch failed: ${res.status}`);
+    if (!res.ok) {
+      // Temporary diagnostics for the persistent 403 despite a browser
+      // User-Agent — log which layer is blocking (Cloudflare vs Blockscout
+      // app-level) and a body snippet, so this block can be removed once
+      // the real cause (IP/ASN reputation vs missing header vs something
+      // else) is confirmed rather than guessed at.
+      const server = res.headers.get("server");
+      const cfRay = res.headers.get("cf-ray");
+      const cfMitigated = res.headers.get("cf-mitigated");
+      const bodySnippet = (await res.text().catch(() => "")).slice(0, 300);
+      console.error(
+        `[oculus][diag] 403 detail — server=${server} cf-ray=${cfRay} cf-mitigated=${cfMitigated} ` +
+        `body=${JSON.stringify(bodySnippet)}`
+      );
+      throw new Error(`token list page ${page} fetch failed: ${res.status}`);
+    }
     const data = await res.json();
     all = all.concat(data.items ?? []);
     page++;
