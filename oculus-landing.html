@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCULUS — it watches the chain</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #0a0b14;
+    --bg-raised: #10121f;
+    --line: #1c2033;
+    --text: #c7cbdc;
+    --text-dim: #8b94a8;
+    --text-faint: #565d75;
+    --gold: #e8c468;
+    --gold-dim: #8a7440;
+    --cyan: #5ee6d0;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono{ font-family: 'JetBrains Mono', monospace; }
+
+  a{ color: inherit; }
+
+  /* ---------- top bar ---------- */
+  header{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 6vw;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand{
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .brand span{ color: var(--gold); }
+  nav{ display:flex; gap: 32px; font-size: 14px; color: var(--text-dim); }
+  nav a{ text-decoration: none; }
+  nav a:hover{ color: var(--text); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height: 82vh;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 60px 6vw 40px;
+    position: relative;
+  }
+
+  .eye-wrap{
+    width: 180px;
+    height: 180px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom: 44px;
+    position: relative;
+  }
+
+  .eye-ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border: 1px solid var(--line);
+  }
+  .eye-ring.r2{ inset: -22px; opacity:.5; }
+  .eye-ring.r3{ inset: -44px; opacity:.25; }
+
+  .eye-core{
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold), #6d5824 70%, transparent 100%);
+    box-shadow: 0 0 40px 4px rgba(232,196,104,0.35);
+    transition: box-shadow 0.6s ease, transform 0.6s ease;
+  }
+  .eye-core.pulse{
+    box-shadow: 0 0 70px 14px rgba(232,196,104,0.6);
+    transform: scale(1.08);
+  }
+
+  .status-line{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 18px;
+  }
+  .status-dot{
+    display:inline-block;
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--cyan);
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  h1{
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    max-width: 720px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+
+  .hero-sub{
+    max-width: 520px;
+    color: var(--text-dim);
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+
+  .cta-row{ display:flex; gap: 14px; flex-wrap: wrap; justify-content:center; }
+
+  .btn{
+    padding: 13px 26px;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration:none;
+    border: 1px solid transparent;
+    transition: opacity 0.15s ease;
+  }
+  .btn:hover{ opacity: 0.85; }
+  .btn-primary{ background: var(--gold); color: #1a1508; }
+  .btn-secondary{ border-color: var(--line); color: var(--text-dim); }
+
+  /* ---------- current reading ---------- */
+  .reading-banner{
+    max-width: 640px;
+    margin: 56px auto 0;
+    padding: 18px 24px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--gold);
+    text-align: left;
+  }
+  .reading-banner .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .reading-banner .text{
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  /* ---------- feed section ---------- */
+  .feed-section{
+    padding: 100px 6vw 120px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .feed-heading{
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+
+  .feed{ display:flex; flex-direction: column; }
+
+  .feed-item{
+    display:grid;
+    grid-template-columns: 90px 90px 1fr;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    opacity: 0;
+    animation: rise 0.5s ease forwards;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .feed-time{
+    font-family:'JetBrains Mono', monospace;
+    color: var(--text-faint);
+    font-size: 12px;
+    padding-top: 2px;
+  }
+  .feed-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    height: fit-content;
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+  }
+  .feed-tag.whale{ color: var(--gold); border-color: var(--gold-dim); }
+  .feed-tag.volume{ color: var(--cyan); border-color: #2b6157; }
+  .feed-tag.deploy{ color: var(--text-dim); }
+
+  .feed-text{ color: var(--text); }
+  .feed-text .addr{ color: var(--text-dim); }
+
+  /* ---------- what it watches ---------- */
+  .watches{
+    padding: 0 6vw 120px;
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+  }
+  .watch-item h3{
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .watch-item p{
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 720px){
+    .watches{ grid-template-columns: 1fr; }
+    .feed-item{ grid-template-columns: 70px 1fr; }
+    .feed-item .feed-tag{ grid-row: 1; }
+    .feed-item .feed-text{ grid-column: 1 / -1; }
+  }
+
+  footer{
+    border-top: 1px solid var(--line);
+    padding: 40px 6vw;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">OCUL<span>U</span>S</div>
+  <nav>
+    <a href="#feed">Feed</a>
+    <a href="#watches">How it watches</a>
+    <a href="#">Contract</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="status-line"><span class="status-dot"></span>OBSERVING ROBINHOOD CHAIN</div>
+
+  <div class="eye-wrap">
+    <div class="eye-ring r3"></div>
+    <div class="eye-ring r2"></div>
+    <div class="eye-ring"></div>
+    <div class="eye-core" id="eyeCore"></div>
+  </div>
+
+  <h1>It doesn't predict. It watches.</h1>
+  <p class="hero-sub">Oculus reads Robinhood Chain in real time — whale accumulation, volume spikes, new deployer activity — and reports exactly what it sees, as it happens.</p>
+
+  <div class="cta-row">
+    <a href="#" class="btn btn-primary">View contract</a>
+    <a href="#feed" class="btn btn-secondary">Watch it work</a>
+  </div>
+
+  <div class="reading-banner">
+    <div class="label">LATEST READING</div>
+    <div class="text mono" id="latestReading">Loading first reading…</div>
+  </div>
+</section>
+
+<section class="feed-section" id="feed">
+  <div class="feed-heading">LIVE FEED — UNFILTERED</div>
+  <div class="feed" id="feedList"></div>
+</section>
+
+<section class="watches" id="watches">
+  <div class="watch-item">
+    <h3>Whale wallets</h3>
+    <p>Flags large accumulation or exits the moment they happen, wallet by wallet, no aggregation delay.</p>
+  </div>
+  <div class="watch-item">
+    <h3>Volume spikes</h3>
+    <p>Reports abnormal trading volume against a token's own baseline, not a generic threshold.</p>
+  </div>
+  <div class="watch-item">
+    <h3>Deployer activity</h3>
+    <p>Tracks wallets that have deployed before — new launches, repeat patterns, known histories.</p>
+  </div>
+</section>
+
+<footer>
+  <div>OCULUS — an eye on Robinhood Chain</div>
+  <div>@oculuswatches</div>
+</footer>
+
+<script>
+  // ---- live feed ----
+  // Pulls real readings from the OCULUS backend (server.js + oculus-watcher.js)
+  // via GET /api/readings and renders them through the same feed UI the
+  // mock generateReading() version used. No UI/CSS changes — just the
+  // data source.
+
+  const feedList = document.getElementById('feedList');
+  const latestReading = document.getElementById('latestReading');
+  const eyeCore = document.getElementById('eyeCore');
+
+  const POLL_MS = 5000;
+  let lastSeenId = 0;
+
+  function formatTime(isoString){
+    const d = isoString ? new Date(isoString) : new Date();
+    return d.toTimeString().slice(0,8);
+  }
+
+  function pushReading(r){
+    // update hero banner — textContent, not innerHTML: reading text embeds
+    // real on-chain token symbols, which are attacker-controlled (anyone
+    // can deploy an ERC-20 with any symbol string), so this must never be
+    // parsed as HTML.
+    latestReading.textContent = r.text;
+
+    // pulse the eye
+    eyeCore.classList.add('pulse');
+    setTimeout(()=> eyeCore.classList.remove('pulse'), 600);
+
+    // add to feed — built with DOM methods + textContent for the same
+    // XSS-safety reason, rather than the innerHTML template the mock
+    // version used.
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'feed-time mono';
+    timeEl.textContent = formatTime(r.timestamp);
+
+    const tagEl = document.createElement('div');
+    tagEl.className = `feed-tag ${r.tag}`;
+    tagEl.textContent = r.label;
+
+    const textEl = document.createElement('div');
+    textEl.className = 'feed-text';
+    textEl.textContent = r.text;
+
+    item.append(timeEl, tagEl, textEl);
+    feedList.prepend(item);
+
+    // cap feed length
+    while(feedList.children.length > 12){
+      feedList.removeChild(feedList.lastChild);
+    }
+  }
+
+  async function poll(){
+    try {
+      const res = await fetch(`/api/readings?since=${lastSeenId}`);
+      if(!res.ok) throw new Error(`status ${res.status}`);
+      const data = await res.json();
+      for(const r of data.readings){
+        pushReading(r);
+        lastSeenId = r.id;
+      }
+    } catch(err){
+      console.error('[oculus] failed to fetch readings:', err.message);
+    }
+  }
+
+  poll();
+  setInterval(poll, POLL_MS);
+</script>
+
+</body>
+</html>
